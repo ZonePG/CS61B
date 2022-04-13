@@ -34,6 +34,7 @@ public class Repository {
         Commit.COMMITS_DIR.mkdir();
         Blob.BLOBS_DIR.mkdir();
         Branch.BRANCHE_DIR.mkdir();
+        Remote.REMOTE_DIR.mkdir();
 
         Commit initialCommit = new Commit();
         initialCommit.save();
@@ -592,6 +593,57 @@ public class Repository {
                 currentCommitId, mergedCommitId);
         if (conflict) {
             exitWithMessage("Encountered a merge conflict.");
+        }
+    }
+
+    public static void addRemoteCommand(String remoteName, String remoteGitPath) {
+        if (Remote.getRemoteGitPath(remoteName) != null) {
+            exitWithMessage("A remote with that name already exists.");
+        }
+
+        remoteGitPath = remoteGitPath.replace("/", File.separator);
+        File remoteDir = new File(remoteGitPath);
+        Remote.addRemoteGitPath(remoteName, remoteGitPath);
+    }
+
+    public static void rmRemoteCommand(String remoteName) {
+        if (Remote.getRemoteGitPath(remoteName) == null) {
+            exitWithMessage("A remote with that name does not exist.");
+        }
+        Remote.removeRemoteGitPath(remoteName);
+    }
+
+    public static void pushCommand(String remoteName, String remoteBranchName) {
+        String remoteGitPath = Remote.getRemoteGitPath(remoteName);
+        String remoteCwd = remoteGitPath + "/..";
+        if (remoteGitPath == null) {
+            exitWithMessage("Remote directory not found.");
+        }
+        String localBranchName = HEAD.getBranchName();
+        List<String> commitHistory = new ArrayList<>();
+
+        String localCommitId = Branch.getCommitId(localBranchName);
+        String remoteCommitId = Branch.getRemoteCommitId(remoteGitPath, remoteBranchName);
+        boolean isHistory = false;
+        while (localCommitId != null) {
+            Commit commit = Commit.load(localCommitId);
+            commitHistory.add(localCommitId);
+            if (localCommitId.equals(remoteCommitId)) {
+                isHistory = true;
+                break;
+            }
+            assert commit != null;
+            localCommitId = commit.getFirstParentId();
+        }
+
+        if (!isHistory) {
+            exitWithMessage("Please pull down remote changes before pushing.");
+        }
+
+        for (String commitId : commitHistory) {
+            Commit commit = Commit.load(commitId);
+            assert commit != null;
+            commit.saveOnRemoteGitPath(remoteGitPath);
         }
     }
 }

@@ -78,6 +78,11 @@ public class Commit implements Serializable {
         Utils.writeObject(file, this);
     }
 
+    public void saveOnRemoteGitPath(String remoteGitPath) {
+        File file = Utils.join(remoteGitPath + "/commits", this.getHash());
+        Utils.writeObject(file, this);
+    }
+
     public static Commit load(String commitId) {
         if (commitId.length() < 40) {
             List<String> commitIdList = Utils.plainFilenamesIn(COMMITS_DIR);

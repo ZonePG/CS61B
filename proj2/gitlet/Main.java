@@ -80,6 +80,21 @@ public class Main {
                 validateNumArgs(args, 2);
                 Repository.mergeCommand(args[1]);
                 break;
+            case "add-remote":
+                validateCWD();
+                validateNumArgs(args, 3);
+                Repository.addRemoteCommand(args[1], args[2]);
+                break;
+            case "rm-remote":
+                validateCWD();
+                validateNumArgs(args, 2);
+                Repository.rmRemoteCommand(args[1]);
+                break;
+            case "push":
+                validateCWD();
+                validateNumArgs(args, 3);
+                Repository.pushCommand(args[1], args[2]);
+                break;
             default:
                 validateCWD();
                 Utils.exitWithMessage("No command with that name exists.");
